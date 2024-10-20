@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "89148371108",
+    "project_id": "flutterotp-5862d",
+    "storage_bucket": "flutterotp-5862d.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:89148371108:android:f1d236d01d257cba8b7631",
+        "android_client_info": {
+          "package_name": "com.example.interoperabilite"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCgSquBmcYb_9Rki5sF3fOSY1shp9Anv5A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
