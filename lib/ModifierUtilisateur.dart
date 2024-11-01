@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:interoperabilite/Api/ApiService.dart'; // Assurez-vous d'importer correctement votre ApiService
+import 'package:interoperabilite/Api/ApiService.dart';
 import 'package:interoperabilite/profilUtilisateur.dart';
-import 'package:intl_phone_field/intl_phone_field.dart'; // Importer IntlPhoneField
+import 'package:intl_phone_field/intl_phone_field.dart';
+import 'package:interoperabilite/widgets/colors.dart'; // Assurez-vous d'importer ColorTheme
 
 class ProfileEditPage extends StatefulWidget {
   @override
@@ -18,23 +19,18 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
   @override
   void initState() {
     super.initState();
-    // Appel à getUserInfo pour remplir les champs
     loadUserInfo();
   }
 
   Future<void> loadUserInfo() async {
     try {
-      // Afficher le token avant d'appeler getUserInfo
-      print('Token utilisé avant getUserInfo: ${apiService.token}'); // Utiliser le getter
-
-      // Appel à la méthode getUserInfo via ApiService
+      print('Token utilisé avant getUserInfo: ${apiService.token}');
       Map<String, dynamic> userInfo = await apiService.getUserInfo();
       setState(() {
         _nameController.text = userInfo['name'];
         _phoneController.text = userInfo['numero'].replaceFirst('+221', '');
-        _passwordController.text=userInfo['password'];
-        _confirmPasswordController.text=userInfo['confirmpassword'];
-        // Correction ici pour le téléphone
+        _passwordController.text = userInfo['password'];
+        _confirmPasswordController.text = userInfo['confirmpassword'];
       });
     } catch (e) {
       print('Erreur lors de la récupération des informations utilisateur: $e');
@@ -49,7 +45,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
     _nameController.dispose();
     _phoneController.dispose();
     _passwordController.dispose();
-    _confirmPasswordController.dispose(); // Dispose du champ de confirmation
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
@@ -62,7 +58,6 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
     }
 
     try {
-      // Appel à la méthode updateUser via ApiService
       await apiService.updateUser(
         name: _nameController.text,
         numero: '+221${_phoneController.text}',
@@ -72,7 +67,6 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
         SnackBar(content: Text('Profil mis à jour avec succès')),
       );
 
-      // Redirection vers la page ProfilUtilisateur
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => ProfilUtilisateur()),
@@ -85,12 +79,11 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Modifier Profil'),
+        title: Text('Modifier Profil', style: TextStyle(fontSize: 12)),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -98,29 +91,50 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
           children: [
             TextField(
               controller: _nameController,
-              decoration: InputDecoration(labelText: 'Nom'),
-            ),
-            SizedBox(height: 24),
-            IntlPhoneField(
-              controller: _phoneController, // Utiliser IntlPhoneField pour le numéro de téléphone
               decoration: InputDecoration(
-                labelText: 'Téléphone',
+                labelText: 'Nom',
+                labelStyle: TextStyle(fontSize: 12),
                 border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(20), // Bordure arrondie de 20
                   borderSide: BorderSide(),
                 ),
               ),
-              initialCountryCode: 'SN', // Remplacez par le code pays par défaut si nécessaire
+              style: TextStyle(fontSize: 12),
+              maxLines: 1, // Limiter à une seule ligne pour réduire la hauteur
+            ),
+            SizedBox(height: 12), // Hauteur réduite entre les champs
+            IntlPhoneField(
+              controller: _phoneController,
+              decoration: InputDecoration(
+                labelText: 'Téléphone',
+                labelStyle: TextStyle(fontSize: 12),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(20), // Bordure arrondie de 20
+                  borderSide: BorderSide(),
+                ),
+              ),
+              initialCountryCode: 'SN',
+              style: TextStyle(fontSize: 12),
               onChanged: (phone) {
-                print(phone.completeNumber); // Vous pouvez utiliser le numéro complet
+                print(phone.completeNumber);
               },
             ),
-
-            SizedBox(height: 16),
+            SizedBox(height: 12), // Hauteur réduite entre les champs
             ElevatedButton(
-              onPressed: () {
-                _updateUserInfo(); // Mise à jour des infos utilisateur
-              },
-              child: Text('Sauvegarder'),
+              onPressed: _updateUserInfo,
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                backgroundColor: ColorTheme.focusedGradient.colors.first, // Dégradé appliqué
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: ShaderMask(
+                shaderCallback: (bounds) => LinearGradient(
+                  colors: ColorTheme.focusedGradient.colors,
+                ).createShader(bounds),
+                child: Text('Sauvegarder', style: TextStyle(fontSize: 12, color: Colors.white)),
+              ),
             ),
           ],
         ),

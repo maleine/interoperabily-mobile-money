@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:interoperabilite/OTPScreen.dart';
 import 'Api/ApiService.dart';
@@ -36,7 +37,8 @@ class _InscriptionPageState extends State<Inscription> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => OtpScreen(numero: numero, name: name, password: password),
+              builder: (context) =>
+                  OtpScreen(numero: numero, name: name, password: password),
             ),
           );
         } else {
@@ -63,7 +65,7 @@ class _InscriptionPageState extends State<Inscription> {
 
             // Triangle en haut de la page
             Container(
-              height: 120,
+              height: 125,
               child: CustomPaint(
                 painter: DiagonalPainter(), // Appel du custom painter
                 child: Container(),
@@ -73,7 +75,7 @@ class _InscriptionPageState extends State<Inscription> {
             // Icône de la personne
             Icon(
               Icons.person,
-              size: 60,
+              size: 50,
               color: Colors.black,
             ),
 
@@ -83,13 +85,13 @@ class _InscriptionPageState extends State<Inscription> {
             Text(
               'Inscription',
               style: TextStyle(
-                fontSize: 24,
+                fontSize: 15,
                 fontWeight: FontWeight.bold,
                 color: Colors.black,
               ),
             ),
 
-            SizedBox(height: 20), // Espace après le titre
+            SizedBox(height: 10), // Espace après le titre
 
             // Formulaire d'inscription
             Padding(
@@ -105,9 +107,12 @@ class _InscriptionPageState extends State<Inscription> {
                           borderRadius: BorderRadius.circular(20), // Bordure de 20 pixels
                           borderSide: BorderSide(color: Colors.black), // Couleur de la bordure
                         ),
+                        contentPadding:
+                        EdgeInsets.symmetric(vertical: 6, horizontal: 16),
                       ),
                       onChanged: (value) => name = value,
-                      validator: (value) => value!.isEmpty ? 'Veuillez entrer votre nom' : null,
+                      validator: (value) =>
+                      value!.isEmpty ? 'Veuillez entrer votre nom' : null,
                     ),
                     SizedBox(height: 16), // Espace entre les champs
                     IntlPhoneField(
@@ -117,6 +122,8 @@ class _InscriptionPageState extends State<Inscription> {
                           borderRadius: BorderRadius.circular(20), // Bordure de 20 pixels
                           borderSide: BorderSide(color: Colors.black), // Couleur de la bordure
                         ),
+                        contentPadding:
+                        EdgeInsets.symmetric(vertical: 6, horizontal: 16),
                       ),
                       initialCountryCode: 'SN',
                       onChanged: (phone) {
@@ -129,7 +136,7 @@ class _InscriptionPageState extends State<Inscription> {
                         return null; // Aucune erreur
                       },
                     ),
-                    SizedBox(height: 16), // Espace entre les champs
+                    SizedBox(height: 8), // Espace entre les champs
                     TextFormField(
                       decoration: InputDecoration(
                         labelText: 'Mot de passe',
@@ -137,10 +144,14 @@ class _InscriptionPageState extends State<Inscription> {
                           borderRadius: BorderRadius.circular(20), // Bordure de 20 pixels
                           borderSide: BorderSide(color: Colors.black), // Couleur de la bordure
                         ),
+                        contentPadding:
+                        EdgeInsets.symmetric(vertical: 6, horizontal: 16),
                       ),
                       obscureText: true,
                       onChanged: (value) => password = value,
-                      validator: (value) => value!.length < 6 ? 'Le mot de passe doit contenir au moins 6 caractères' : null,
+                      validator: (value) => value!.length < 6
+                          ? 'Le mot de passe doit contenir au moins 6 caractères'
+                          : null,
                     ),
                     SizedBox(height: 16), // Espace entre les champs
                     TextFormField(
@@ -150,12 +161,16 @@ class _InscriptionPageState extends State<Inscription> {
                           borderRadius: BorderRadius.circular(20), // Bordure de 20 pixels
                           borderSide: BorderSide(color: Colors.black), // Couleur de la bordure
                         ),
+                        contentPadding:
+                        EdgeInsets.symmetric(vertical: 6, horizontal: 16),
                       ),
                       obscureText: true,
                       onChanged: (value) => confirmPassword = value,
-                      validator: (value) => value!.isEmpty ? 'Veuillez confirmer votre mot de passe' : null,
+                      validator: (value) => value!.isEmpty
+                          ? 'Veuillez confirmer votre mot de passe'
+                          : null,
                     ),
-                    SizedBox(height: 20),
+                    SizedBox(height: 10),
 
                     // Bouton d'inscription avec dégradé
                     Container(
@@ -170,20 +185,13 @@ class _InscriptionPageState extends State<Inscription> {
                           shadowColor: Colors.transparent, // Enlever l'ombre
                         ),
                         onPressed: _register,
-                        child: Text('S\'inscrire', style: TextStyle(color: Colors.white)), // Texte en blanc
+                        child: Text('S\'inscrire',
+                            style: TextStyle(color: Colors.white)), // Texte en blanc
                       ),
                     ),
 
-                    // Lien vers la page de connexion
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pushNamed(context, '/connexion'); // Rediriger vers la page de connexion
-                      },
-                      child: Text(
-                        'Vous avez déjà un compte ? Connectez-vous',
-                        style: TextStyle(color: Colors.black),
-                      ),
-                    ),
+                    SizedBox(height: 20), // Espacement avant le lien de connexion
+                    _buildSignUpLink(context), // Passer le context ici
                   ],
                 ),
               ),
@@ -191,7 +199,7 @@ class _InscriptionPageState extends State<Inscription> {
 
             // Triangle en bas de la page (inversé)
             Container(
-              height: 120,
+              height: 125,
               child: CustomPaint(
                 painter: InvertedDiagonalPainter(), // Appel du custom painter inversé
                 child: Container(),
@@ -204,13 +212,40 @@ class _InscriptionPageState extends State<Inscription> {
   }
 }
 
+// Fonction corrigée avec le context
+Widget _buildSignUpLink(BuildContext context) {
+  return RichText(
+    textAlign: TextAlign.center,
+    text: TextSpan(
+      children: [
+        const TextSpan(
+          text: 'Vous avez déjà un compte ? ',
+          style: TextStyle(color: Colors.black, fontSize: 16),
+        ),
+        TextSpan(
+          text: 'Connectez-vous',
+          style: const TextStyle(
+            color: Colors.blue,
+            fontSize: 16,
+            decoration: TextDecoration.underline,
+          ),
+          recognizer: TapGestureRecognizer()
+            ..onTap = () {
+              Navigator.pushNamed(context, '/connexion');
+            },
+        ),
+      ],
+    ),
+  );
+}
+
 class DiagonalPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
-    var paint = Paint()
-      ..style = PaintingStyle.fill;
+    var paint = Paint()..style = PaintingStyle.fill;
 
     // Dégradé pour le triangle (haut) utilisant ColorTheme.focusedGradient
-    paint.shader = ColorTheme.focusedGradient.createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+    paint.shader = ColorTheme.focusedGradient
+        .createShader(Rect.fromLTWH(0, 0, size.width, size.height));
 
     var path = Path();
     path.lineTo(0, 0); // Point d'origine (haut gauche)
@@ -230,11 +265,11 @@ class DiagonalPainter extends CustomPainter {
 // Classe pour le triangle inversé
 class InvertedDiagonalPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
-    var paint = Paint()
-      ..style = PaintingStyle.fill;
+    var paint = Paint()..style = PaintingStyle.fill;
 
     // Dégradé pour le triangle (bas) utilisant ColorTheme.focusedGradient
-    paint.shader = ColorTheme.focusedGradient.createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+    paint.shader = ColorTheme.focusedGradient
+        .createShader(Rect.fromLTWH(0, 0, size.width, size.height));
 
     var path = Path();
     path.lineTo(size.width, size.height); // Bas droit

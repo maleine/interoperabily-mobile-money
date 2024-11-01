@@ -3,8 +3,9 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:interoperabilite/widgets/colors.dart';
 import 'package:interoperabilite/Api/ApiService.dart';
-import 'package:interoperabilite/ModifierUtilisateur.dart'; // Assurez-vous que ce chemin est correct
-import 'package:share_plus/share_plus.dart'; // Importer le package pour le partage
+import 'package:interoperabilite/ModifierUtilisateur.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   runApp(MyApp());
@@ -18,7 +19,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: ProfilUtilisateur(), // Page d'accueil
+      home: ProfilUtilisateur(),
     );
   }
 }
@@ -34,21 +35,26 @@ class _ProfilUtilisateurState extends State<ProfilUtilisateur> {
   ApiService apiService = ApiService();
 
   String userName = '';
-  String userNumero = ''; // Ces champs seront remplis par l'API
+  String userNumero = '';
 
   @override
   void initState() {
     super.initState();
-    // Récupérer les informations de l'utilisateur lors de l'initialisation du widget
     loadUserInfo();
   }
 
   Future<void> loadUserInfo() async {
     try {
       Map<String, dynamic> userInfo = await apiService.getUserInfo();
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? savedImagePath = prefs.getString('profile_image_path');
+
       setState(() {
         userName = userInfo['name'];
         userNumero = userInfo['numero'];
+        if (savedImagePath != null && savedImagePath.isNotEmpty) {
+          _imageFile = XFile(savedImagePath);
+        }
       });
     } catch (e) {
       print('Erreur lors de la récupération des informations de l\'utilisateur: $e');
@@ -60,11 +66,37 @@ class _ProfilUtilisateurState extends State<ProfilUtilisateur> {
 
   Future<void> _pickImage() async {
     try {
-      final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-      if (pickedFile != null) {
-        setState(() {
-          _imageFile = pickedFile;
-        });
+      final ImageSource? source = await showDialog<ImageSource>(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Choisissez une source'),
+            actions: <Widget>[
+              TextButton(
+                child: Text('Caméra'),
+                onPressed: () {
+                  Navigator.of(context).pop(ImageSource.camera);
+                },
+              ),
+              TextButton(
+                child: Text('Galerie'),
+                onPressed: () {
+                  Navigator.of(context).pop(ImageSource.gallery);
+                },
+              ),
+            ],
+          );
+        },
+      );
+
+      if (source != null) {
+        final pickedFile = await _picker.pickImage(source: source);
+        if (pickedFile != null) {
+          setState(() {
+            _imageFile = pickedFile;
+          });
+          await _saveImage(pickedFile.path);
+        }
       }
     } catch (e) {
       print('Erreur lors du choix de l\'image: $e');
@@ -74,11 +106,16 @@ class _ProfilUtilisateurState extends State<ProfilUtilisateur> {
     }
   }
 
+  Future<void> _saveImage(String imagePath) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('profile_image_path', imagePath);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Profil Utilisateur'),
+        title: Text('Profil Utilisateur', style: TextStyle(fontSize: 12)),
       ),
       body: Center(
         child: Column(
@@ -115,17 +152,17 @@ class _ProfilUtilisateurState extends State<ProfilUtilisateur> {
             ),
             SizedBox(height: 10.0),
             Text(
-              userName, // Affiche le nom de l'utilisateur
+              userName,
               style: TextStyle(
-                fontSize: 20,
+                fontSize: 12,
                 fontWeight: FontWeight.bold,
               ),
             ),
             SizedBox(height: 5.0),
             Text(
-              userNumero, // Affiche le numéro de téléphone de l'utilisateur
+              userNumero,
               style: TextStyle(
-                fontSize: 16,
+                fontSize: 12,
                 color: Colors.grey,
               ),
             ),
@@ -141,7 +178,6 @@ class _ProfilUtilisateurState extends State<ProfilUtilisateur> {
                 if (confirm == true) {
                   try {
                     await apiService.logout();
-                    // Redirige vers la page de connexion après la déconnexion
                     Navigator.of(context).pushReplacementNamed('/connexion');
                   } catch (e) {
                     print('Erreur lors de la déconnexion: $e');
@@ -160,8 +196,7 @@ class _ProfilUtilisateurState extends State<ProfilUtilisateur> {
                 bool? confirm = await _showDeleteConfirmationDialog(context);
                 if (confirm == true) {
                   try {
-                    await apiService.archiveUser(); // Appel à la fonction d'archivage
-                    // Rediriger l'utilisateur vers la page de connexion ou une autre page après l'archivage
+                    await apiService.archiveUser();
                     Navigator.of(context).pushReplacementNamed('/connexion');
                   } catch (e) {
                     print('Erreur lors de l\'archivage de l\'utilisateur: $e');
@@ -183,17 +218,17 @@ class _ProfilUtilisateurState extends State<ProfilUtilisateur> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Déconnexion'),
-          content: Text('Êtes-vous sûr de vouloir vous déconnecter ?'),
+          title: Text('Déconnexion', style: TextStyle(fontSize: 12)),
+          content: Text('Êtes-vous sûr de vouloir vous déconnecter ?', style: TextStyle(fontSize: 12)),
           actions: <Widget>[
             TextButton(
-              child: Text('Annuler'),
+              child: Text('Annuler', style: TextStyle(fontSize: 12)),
               onPressed: () {
                 Navigator.of(context).pop(false);
               },
             ),
             TextButton(
-              child: Text('Confirmer'),
+              child: Text('Confirmer', style: TextStyle(fontSize: 12)),
               onPressed: () {
                 Navigator.of(context).pop(true);
               },
@@ -209,17 +244,19 @@ class _ProfilUtilisateurState extends State<ProfilUtilisateur> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Supprimer le Profil'),
-          content: Text('Êtes-vous sûr de vouloir supprimer votre profil ? Cette action est irréversible.'),
+          title: Text('Supprimer le Profil', style: TextStyle(fontSize: 12)),
+          content: Text(
+              'Êtes-vous sûr de vouloir supprimer votre profil ? Cette action est irréversible.',
+              style: TextStyle(fontSize: 12)),
           actions: <Widget>[
             TextButton(
-              child: Text('Annuler'),
+              child: Text('Annuler', style: TextStyle(fontSize: 12)),
               onPressed: () {
                 Navigator.of(context).pop(false);
               },
             ),
             TextButton(
-              child: Text('Confirmer'),
+              child: Text('Confirmer', style: TextStyle(fontSize: 12)),
               onPressed: () {
                 Navigator.of(context).pop(true);
               },
@@ -232,7 +269,7 @@ class _ProfilUtilisateurState extends State<ProfilUtilisateur> {
 
   Widget _buildOption(BuildContext context, String title, IconData icon, {Function()? action}) {
     return ListTile(
-      title: Text(title),
+      title: Text(title, style: TextStyle(fontSize: 12)),
       leading: _buildGradientIcon(icon, 24.0),
       onTap: () {
         if (title == 'Modifier Profil') {
@@ -243,15 +280,12 @@ class _ProfilUtilisateurState extends State<ProfilUtilisateur> {
             ),
           );
         } else if (title == 'Partager l\'Application') {
-          // Utilisation de Share.share pour partager l'application via les réseaux sociaux
           Share.share(
             'Découvrez cette application incroyable ! Téléchargez-la depuis ce lien : https://lien-vers-votre-application.com',
             subject: 'Découvrez cette application !',
           );
         } else if (action != null) {
           action();
-        } else {
-          print('$title tapped');
         }
       },
     );
