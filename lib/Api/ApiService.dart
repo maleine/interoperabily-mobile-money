@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 
 class ApiService {
   static final ApiService _instance = ApiService._internal();
-  final String baseUrl = 'http://192.168.1.4:8000/api'; // Remplacer par l'URL de votre API
+  final String baseUrl = 'http://192.168.1.6:8000/api'; // Remplacer par l'URL de votre API
   String? _token; // Token en mémoire
 
   factory ApiService() {
@@ -228,4 +228,57 @@ class ApiService {
     }
   }
 
-}
+  /// Effectuer une transaction
+  Future<Map<String, dynamic>> transaction({
+    required String fromOperator,
+    required String toOperator,
+    required double amount,
+    required String fromPhone,
+    required String toPhone,
+  }) async {
+    // Vérifier si le token est valide
+    if (_token == null) {
+      throw Exception('Utilisateur non authentifié. Veuillez vous connecter.');
+    }
+
+    // Préparer les données de la transaction
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/exchangeFunds'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $_token',  // Inclure le token d'authentification
+        },
+        body: jsonEncode({
+          'from_operator': fromOperator,  // L'opérateur du côté de l'utilisateur
+          'to_operator': toOperator,  // L'opérateur du destinataire
+          'amount': amount,  // Le montant de la transaction
+          'from_phone': fromPhone,  // Le numéro de téléphone de l'utilisateur
+          'to_phone': toPhone,  // Le numéro de téléphone du destinataire
+        }),
+      );
+
+      // Afficher le statut et le corps de la réponse dans la console
+      print("Statut de la réponse : ${response.statusCode}");
+      print("Corps de la réponse : ${response.body}");
+
+
+      // Vérifier la réponse de l'API
+      if (response.statusCode == 200) {
+        // Retourner les détails de la transaction
+        return jsonDecode(response.body);
+      } else {
+        // Gérer l'erreur en cas d'échec de la transaction
+        final errorMessage = jsonDecode(response.body)['message'] ?? 'Erreur lors de la transaction';
+        throw Exception(errorMessage);
+      }
+    } catch (e) {
+      // En cas d'erreur avec la requête (problème réseau, JSON invalide, etc.)
+      throw Exception('Une erreur est survenue lors de la transaction: $e');
+    }
+  }
+
+  }
+
+
+
